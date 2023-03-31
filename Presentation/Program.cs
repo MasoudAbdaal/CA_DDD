@@ -3,7 +3,7 @@ using Application;
 
 var builder = WebApplication.CreateBuilder(args);
 {
-    builder.Services.AddInfrastructure()
+    builder.Services.AddInfrastructure(builder.Configuration)
     .AddApplication();
 
     //Configuration and Dependency Injection
