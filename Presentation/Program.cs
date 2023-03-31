@@ -1,5 +1,8 @@
+using Application.Services.Authentication;
+
 var builder = WebApplication.CreateBuilder(args);
 {
+    builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
     //Configuration and Dependency Injection
     builder.Services.AddControllers();
 }
