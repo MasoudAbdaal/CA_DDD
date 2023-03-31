@@ -1,2 +1,2 @@
 @host= http://localhost:5164
-GET {{host}}/
+GET {{host}}/WeatherForecast
