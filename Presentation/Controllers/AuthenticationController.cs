@@ -7,6 +7,7 @@ namespace Presentation.Controllers;
 
 [ApiController]
 [Route("auth")]
+// [ErrorHandlingFilterAttributes]
 public class AuthenticationController : ControllerBase
 {
     private readonly IAuthenticationService _authenticationService;

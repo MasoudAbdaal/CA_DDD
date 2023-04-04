@@ -5,9 +5,9 @@ namespace Infrastructure.Persistance;
 
 public class UserRepository : IUserRepository
 {
-    //if define NOT STATIC, _users going to be empty
-    //WHY?
-    private static readonly List<User> _users = new ();
+    //Why It Defines As STATIC?
+    //https://stackoverflow.com/questions/4026785/how-do-static-properties-work-in-an-asp-net-environment/4026795#4026795
+    private static readonly List<User> _users = new();
 
     public void Add(User user)
     {
