@@ -1,7 +1,9 @@
+using Domain.Entities;
+
 namespace Application.Services.Authentication;
 
 public record AuthenticationResult
 (
-    Guid Id,
+    User user,
     string Token
 );
