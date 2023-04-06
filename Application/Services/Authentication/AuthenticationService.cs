@@ -1,3 +1,4 @@
+using Application.Common.Errors;
 using Application.Common.Interfaces.Authentication;
 using Application.Common.Interfaces.Persistance;
 using Domain.Entities;
@@ -31,7 +32,7 @@ public class AuthenticationService : IAuthenticationService
     public AuthenticationResult Register(string name, string lastName, string email, string password)
     {
         if (_userRepository.GetUserByEmail(email) is User)
-            throw new Exception("User Already EXIST!!");
+            throw new DuplicateEmailException();
 
         var user = new User
         {
@@ -42,7 +43,7 @@ public class AuthenticationService : IAuthenticationService
         };
 
         var token = _jWTTokenGenerator.GenerateToken(user);
-        
+
         _userRepository.Add(user);
 
         return new AuthenticationResult(user, token);

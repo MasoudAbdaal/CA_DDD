@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Application.Common.Errors;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +10,12 @@ public class ErrorsController : ControllerBase
     {
         IExceptionHandlerFeature exception = HttpContext.Features.Get<IExceptionHandlerFeature>()!;
 
-        return Problem(title: exception?.Error.Message);
+        var (statusCode, message) = exception.Error switch
+        {
+            IServiceExceptions serviceExceptions => ((int)serviceExceptions.StatusCode, serviceExceptions.ErrorMessage),
+            _ => (StatusCodes.Status500InternalServerError, "Unhandled Error!!")
+        };
+
+        return Problem(title: message, statusCode: statusCode);
     }
 }
