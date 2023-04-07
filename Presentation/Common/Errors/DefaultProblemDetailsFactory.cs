@@ -6,18 +6,18 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace Microsoft.AspNetCore.Mvc
+namespace Microsoft.AspNetCore.Mvc;
+
+public class DefaultProblemDetailsFactory : ProblemDetailsFactory
 {
-    public class DefaultProblemDetailsFactory : ProblemDetailsFactory
+    private class MyCustomErrorProperty : ProblemDetails
     {
-        private class MyCustomErrorProperty : ProblemDetails
-        {
-            public string MASAAGE { get; set; } = string.Empty;
-        }
+        public string MASAAGE { get; set; } = string.Empty;
+    }
 
 
-        private readonly ILogger<DefaultProblemDetailsFactory> _logger;
-        private readonly IDictionary<int, string> _defaultTitles = new Dictionary<int, string>()
+    private readonly ILogger<DefaultProblemDetailsFactory> _logger;
+    private readonly IDictionary<int, string> _defaultTitles = new Dictionary<int, string>()
         {
             {400, "Bad Request"},
             {401, "Unauthorized"},
@@ -61,118 +61,117 @@ namespace Microsoft.AspNetCore.Mvc
             {511, "Network Authentication Required"}
         };
 
-        public DefaultProblemDetailsFactory(ILogger<DefaultProblemDetailsFactory> logger)
+    public DefaultProblemDetailsFactory(ILogger<DefaultProblemDetailsFactory> logger)
+    {
+        _logger = logger;
+    }
+
+    public override ProblemDetails CreateProblemDetails(HttpContext httpContext,
+        int? statusCode = null,
+        string? title = null,
+        string? type = null,
+        string? detail = null,
+        string? instance = null)
+    {
+        var problemDetails = new MyCustomErrorProperty
         {
-            _logger = logger;
-        }
+            MASAAGE = "MASSAGEmeee",
+            // Title = GetDefaultTitle(statusCode),
+            Title = title,
+            Status = statusCode,
+            Detail = detail,
+            Instance = instance
+        };
 
-        public override ProblemDetails CreateProblemDetails(HttpContext httpContext,
-            int? statusCode = null,
-            string? title = null,
-            string? type = null,
-            string? detail = null,
-            string? instance = null)
+        if (httpContext == null || httpContext.Request == null || httpContext.Request.Headers == null)
         {
-            var problemDetails = new MyCustomErrorProperty
-            {
-                MASAAGE = "MASSAGEmeee",
-                // Title = GetDefaultTitle(statusCode),
-                Title = title,
-                Status = statusCode,
-                Detail = detail,
-                Instance = instance
-            };
-
-            if (httpContext == null || httpContext.Request == null || httpContext.Request.Headers == null)
-            {
-                _logger?.LogWarning(JsonSerializer.Serialize(problemDetails));
-                return problemDetails;
-            }
-
-            problemDetails.Type = $"https://httpstatuses.com/{statusCode ?? 500}";
-            problemDetails.Extensions["traceId"] = httpContext.TraceIdentifier;
-
-            if (httpContext.Request.Headers.TryGetValue("Accept", out var accept) &&
-                accept.Contains("application/json"))
-            {
-                problemDetails.Extensions["errors"] = GetErrors(httpContext);
-            }
-
+            _logger?.LogWarning(JsonSerializer.Serialize(problemDetails));
             return problemDetails;
         }
 
+        problemDetails.Type = $"https://httpstatuses.com/{statusCode ?? 500}";
+        problemDetails.Extensions["traceId"] = httpContext.TraceIdentifier;
 
-        public override ValidationProblemDetails CreateValidationProblemDetails(
-            HttpContext httpContext,
-            ModelStateDictionary modelStateDictionary,
-            int? statusCode = null,
-            string? title = null,
-            string? type = null,
-            string? detail = null,
-            string? instance = null)
+        if (httpContext.Request.Headers.TryGetValue("Accept", out var accept) &&
+            accept.Contains("application/json"))
         {
-            var problemDetails = new ValidationProblemDetails(modelStateDictionary)
-            {
-                Title = GetDefaultTitle(statusCode),
-                Status = statusCode,
-                Detail = detail,
-                Instance = instance
-            };
+            problemDetails.Extensions["errors"] = GetErrors(httpContext);
+        }
 
-            if (httpContext == null || httpContext.Request == null || httpContext.Request.Headers == null)
-            {
-                _logger?.LogWarning(JsonSerializer.Serialize(problemDetails));
-                return problemDetails;
-            }
+        return problemDetails;
+    }
 
-            problemDetails.Type = $"https://httpstatuses.com/{statusCode ?? 400}";
-            problemDetails.Extensions["traceId"] = httpContext.TraceIdentifier;
 
-            if (httpContext.Request.Headers.TryGetValue("Accept", out var accept) &&
-                accept.Contains("application/json"))
-            {
-                problemDetails.Extensions["modelState"] = modelStateDictionary;
+    public override ValidationProblemDetails CreateValidationProblemDetails(
+        HttpContext httpContext,
+        ModelStateDictionary modelStateDictionary,
+        int? statusCode = null,
+        string? title = null,
+        string? type = null,
+        string? detail = null,
+        string? instance = null)
+    {
+        var problemDetails = new ValidationProblemDetails(modelStateDictionary)
+        {
+            Title = GetDefaultTitle(statusCode),
+            Status = statusCode,
+            Detail = detail,
+            Instance = instance
+        };
 
-                problemDetails.Extensions["errors"] = GetErrors(httpContext);
-            }
-
+        if (httpContext == null || httpContext.Request == null || httpContext.Request.Headers == null)
+        {
+            _logger?.LogWarning(JsonSerializer.Serialize(problemDetails));
             return problemDetails;
         }
 
+        problemDetails.Type = $"https://httpstatuses.com/{statusCode ?? 400}";
+        problemDetails.Extensions["traceId"] = httpContext.TraceIdentifier;
 
-        private string GetDefaultTitle(int? statusCode)
+        if (httpContext.Request.Headers.TryGetValue("Accept", out var accept) &&
+            accept.Contains("application/json"))
         {
-            if (_defaultTitles.TryGetValue(statusCode ?? 500, out var title))
-            {
-                return title;
-            }
+            problemDetails.Extensions["modelState"] = modelStateDictionary;
 
-            throw new ArgumentOutOfRangeException(
-                nameof(statusCode),
-                statusCode,
-                $"No default title exists for status code {statusCode}.");
+            problemDetails.Extensions["errors"] = GetErrors(httpContext);
         }
 
-        private object GetErrors(HttpContext httpContext)
-        {
-            var modelStateDictionary = httpContext.Features.Get<ValidationProblemDetails>()!
-                .Extensions["modelState"] as ModelStateDictionary;
-            var errors = modelStateDictionary!.Keys
-                .SelectMany(key =>
-                    modelStateDictionary[key]!.Errors.Select(x => new ValidationError
-                    {
-                        FieldName = key,
-                        Message = x.ErrorMessage
-                    }));
+        return problemDetails;
+    }
 
-            return new { errors };
+
+    private string GetDefaultTitle(int? statusCode)
+    {
+        if (_defaultTitles.TryGetValue(statusCode ?? 500, out var title))
+        {
+            return title;
         }
 
-        private class ValidationError
-        {
-            public string FieldName { get; set; } = string.Empty;
+        throw new ArgumentOutOfRangeException(
+            nameof(statusCode),
+            statusCode,
+            $"No default title exists for status code {statusCode}.");
+    }
 
-            public string Message { get; set; } = string.Empty;
-        }
+    private object GetErrors(HttpContext httpContext)
+    {
+        var modelStateDictionary = httpContext.Features.Get<ValidationProblemDetails>()!
+            .Extensions["modelState"] as ModelStateDictionary;
+        var errors = modelStateDictionary!.Keys
+            .SelectMany(key =>
+                modelStateDictionary[key]!.Errors.Select(x => new ValidationError
+                {
+                    FieldName = key,
+                    Message = x.ErrorMessage
+                }));
+
+        return new { errors };
+    }
+
+    private class ValidationError
+    {
+        public string FieldName { get; set; } = string.Empty;
+
+        public string Message { get; set; } = string.Empty;
     }
 }
