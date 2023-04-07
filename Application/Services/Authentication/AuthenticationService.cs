@@ -1,6 +1,9 @@
+using Application.Common.Errors;
 using Application.Common.Interfaces.Authentication;
 using Application.Common.Interfaces.Persistance;
 using Domain.Entities;
+using FluentResults;
+using OneOf;
 
 namespace Application.Services.Authentication;
 
@@ -28,10 +31,10 @@ public class AuthenticationService : IAuthenticationService
         return new AuthenticationResult(user, token);
     }
 
-    public AuthenticationResult Register(string name, string lastName, string email, string password)
+    public OneOf<AuthenticationResult, DuplicateEmailError> Register(string name, string lastName, string email, string password)
     {
         if (_userRepository.GetUserByEmail(email) is User)
-            throw new Exception("User Already EXIST!!");
+            return new DuplicateEmailError();
 
         var user = new User
         {
@@ -42,7 +45,32 @@ public class AuthenticationService : IAuthenticationService
         };
 
         var token = _jWTTokenGenerator.GenerateToken(user);
-        
+
+        _userRepository.Add(user);
+
+        return new AuthenticationResult(user, token);
+    }
+
+    Result<AuthenticationResult> IAuthenticationService.Register(string name, string lastName, string email, string password)
+    {
+        if (_userRepository.GetUserByEmail(email) is User)
+            return Result.Fail<AuthenticationResult>(new[]
+            {
+                new Result_DuplicateEmailError(),
+                new Result_DuplicateEmailError(),
+                new Result_DuplicateEmailError()
+            });
+
+        var user = new User
+        {
+            Email = email,
+            FirstName = name,
+            LastName = lastName,
+            Password = password
+        };
+
+        var token = _jWTTokenGenerator.GenerateToken(user);
+
         _userRepository.Add(user);
 
         return new AuthenticationResult(user, token);
