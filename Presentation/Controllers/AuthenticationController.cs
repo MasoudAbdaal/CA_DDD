@@ -1,10 +1,12 @@
 using System.Net;
-using Application.Common.Interfaces.Authentication;
-using Application.Services.Authentication.Common;
+using Application.Authentication.Commands;
+using Application.Authentication.Common;
+using Application.Authentication.Queries.Login;
 using Contracts.Authentication;
 using FluentResults;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using OneOf;
+
 
 namespace Presentation.Controllers;
 
@@ -13,22 +15,20 @@ namespace Presentation.Controllers;
 // [ErrorHandlingFilterAttributes]
 public class AuthenticationController : ApiController
 {
-    private readonly IAuthenticationQueryService _authenticationQueryService;
+    private readonly ISender _mediator;
 
-    private readonly IAuthenticationCommandService _authenticationCommandService;
-
-    public AuthenticationController(IAuthenticationCommandService authenticationCommandService, IAuthenticationQueryService authenticationQueryService)
+    public AuthenticationController(ISender mediator)
     {
-        _authenticationCommandService = authenticationCommandService;
-        _authenticationQueryService = authenticationQueryService;
+        _mediator = mediator;
     }
 
     [HttpPost("register")]
-    public IActionResult Register(RegisterRequest request)
+    public async Task<IActionResult> Register(RegisterRequest request)
     {
+        var command = new RegisterCommand(request.Name, request.LastName, request.Email, request.Password);
 
 
-        Result<AuthenticationResult> registerResult = _authenticationCommandService.Register(request.Name, request.LastName, request.Email, request.Password);
+        Result<AuthenticationResult> registerResult = await _mediator.Send(command);
 
         if (registerResult.IsSuccess)
             return Ok(registerResult.Value);
@@ -54,10 +54,12 @@ public class AuthenticationController : ApiController
     }
 
     [HttpPost("login")]
-    public IActionResult Login(LoginRequest request)
+    public async Task<IActionResult> Login(LoginRequest request)
     {
-        var authResult = _authenticationQueryService.Login(request.Email, request.Password);
-        return Ok(authResult);
+        var query = new LoginQuery(request.Email, request.Password);
+
+        var authResult = await _mediator.Send(query);
+        return Ok(authResult.Value);
     }
 
 }

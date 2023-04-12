@@ -1,8 +1,8 @@
 using System.Diagnostics;
+using Application.Authentication.Common;
 using Application.Common.Errors;
 using Application.Common.Interfaces.Authentication;
 using Application.Common.Interfaces.Persistance;
-using Application.Services.Authentication.Common;
 using Domain.Entities;
 using FluentResults;
 using OneOf;
