@@ -1,18 +1,21 @@
+using System.Diagnostics;
 using Application.Common.Errors;
 using Application.Common.Interfaces.Authentication;
 using Application.Common.Interfaces.Persistance;
+using Application.Services.Authentication.Common;
 using Domain.Entities;
 using FluentResults;
 using OneOf;
 
-namespace Application.Services.Authentication;
+namespace Application.Services.Authentication.Commands;
 
-public class AuthenticationService : IAuthenticationService
+[DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
+public class AuthenticationCommandService : IAuthenticationCommandService
 {
     private readonly IJWTTokenGenerator _jWTTokenGenerator;
     private readonly IUserRepository _userRepository;
 
-    public AuthenticationService(IJWTTokenGenerator jWTTokenGenerator, IUserRepository userRepository)
+    public AuthenticationCommandService(IJWTTokenGenerator jWTTokenGenerator, IUserRepository userRepository)
     {
         _jWTTokenGenerator = jWTTokenGenerator;
         _userRepository = userRepository;
@@ -51,7 +54,7 @@ public class AuthenticationService : IAuthenticationService
         return new AuthenticationResult(user, token);
     }
 
-    Result<AuthenticationResult> IAuthenticationService.Register(string name, string lastName, string email, string password)
+    Result<AuthenticationResult> IAuthenticationCommandService.Register(string name, string lastName, string email, string password)
     {
         if (_userRepository.GetUserByEmail(email) is User)
             return Result.Fail<AuthenticationResult>(new[]
@@ -75,4 +78,6 @@ public class AuthenticationService : IAuthenticationService
 
         return new AuthenticationResult(user, token);
     }
+
+    private string GetDebuggerDisplay() => ToString()!;
 }

@@ -1,5 +1,6 @@
 using System.Net;
-using Application.Services.Authentication;
+using Application.Common.Interfaces.Authentication;
+using Application.Services.Authentication.Common;
 using Contracts.Authentication;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +13,14 @@ namespace Presentation.Controllers;
 // [ErrorHandlingFilterAttributes]
 public class AuthenticationController : ApiController
 {
-    private readonly IAuthenticationService _authenticationService;
+    private readonly IAuthenticationQueryService _authenticationQueryService;
 
-    public AuthenticationController(IAuthenticationService authenticationService)
+    private readonly IAuthenticationCommandService _authenticationCommandService;
+
+    public AuthenticationController(IAuthenticationCommandService authenticationCommandService, IAuthenticationQueryService authenticationQueryService)
     {
-        _authenticationService = authenticationService;
+        _authenticationCommandService = authenticationCommandService;
+        _authenticationQueryService = authenticationQueryService;
     }
 
     [HttpPost("register")]
@@ -24,7 +28,7 @@ public class AuthenticationController : ApiController
     {
 
 
-        Result<AuthenticationResult> registerResult = _authenticationService.Register(request.Name, request.LastName, request.Email, request.Password);
+        Result<AuthenticationResult> registerResult = _authenticationCommandService.Register(request.Name, request.LastName, request.Email, request.Password);
 
         if (registerResult.IsSuccess)
             return Ok(registerResult.Value);
@@ -52,7 +56,7 @@ public class AuthenticationController : ApiController
     [HttpPost("login")]
     public IActionResult Login(LoginRequest request)
     {
-        var authResult = _authenticationService.Login(request.Email, request.Password);
+        var authResult = _authenticationQueryService.Login(request.Email, request.Password);
         return Ok(authResult);
     }
 
