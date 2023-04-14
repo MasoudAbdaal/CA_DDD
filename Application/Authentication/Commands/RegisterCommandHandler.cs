@@ -37,10 +37,11 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Au
             Password = command.Password
         };
 
-        var token = await Task.Run(() => _jWTTokenGenerator.GenerateToken(user));
-
+        var token = _jWTTokenGenerator.GenerateToken(user);
         _userRepository.Add(user);
 
-        return new AuthenticationResult(user, token);
+        var result = new AuthenticationResult(user, token);
+
+        return await Task.FromResult<Result<AuthenticationResult>>(result);
     }
 }

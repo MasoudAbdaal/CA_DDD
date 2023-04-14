@@ -22,13 +22,15 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, Result<Authenticati
 
     public async Task<Result<AuthenticationResult>> Handle(LoginQuery query, CancellationToken cancellationToken)
     {
+        await Task.CompletedTask;
+        
         if (_userRepository.GetUserByEmail(query.email) is not User user)
             throw new Exception("User not found with this email!");
 
         if (user.Password != query.password)
             throw new Exception("Invalid Credential");
 
-        var token = await Task.Run(() => _jWTTokenGenerator.GenerateToken(user));
+        var token = _jWTTokenGenerator.GenerateToken(user);
 
         return new AuthenticationResult(user, token);
     }
