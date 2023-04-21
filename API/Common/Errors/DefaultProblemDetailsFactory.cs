@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
+using FluentResults;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -12,8 +13,10 @@ public class DefaultProblemDetailsFactory : ProblemDetailsFactory
 {
     private class MyCustomErrorProperty : ProblemDetails
     {
+        public IError? ValidationErrors { get; set; }
         public string MASAAGE { get; set; } = string.Empty;
     }
+
 
 
     private readonly ILogger<DefaultProblemDetailsFactory> _logger;
@@ -71,7 +74,8 @@ public class DefaultProblemDetailsFactory : ProblemDetailsFactory
         string? title = null,
         string? type = null,
         string? detail = null,
-        string? instance = null)
+        string? instance = null
+        )
     {
         var problemDetails = new MyCustomErrorProperty
         {
