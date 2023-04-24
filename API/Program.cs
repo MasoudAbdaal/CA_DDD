@@ -7,6 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
     .AddPresentation()
     .AddInfrastructure(builder.Configuration)
     .AddApplication();
+
+    // builder.WebHost.UseUrls("https://localhost:4002");
 }
 
 var app = builder.Build();
