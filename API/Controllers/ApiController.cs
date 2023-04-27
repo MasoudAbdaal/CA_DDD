@@ -19,9 +19,9 @@ public class ApiController : ControllerBase
 
         return ValidationProblem(modelStateDictionary);
 
-        return Problem(
-            statusCode: StatusCodes.Status500InternalServerError,
-            detail: errors[0].Message,
-            title: String.Join("  ", "Invalid ", errors[0].Reasons[0].Message));
+        // return Problem(
+        //     statusCode: StatusCodes.Status500InternalServerError,
+        //     detail: errors[0].Message,
+        //     title: String.Join("  ", "Invalid ", errors[0].Reasons[0].Message));
     }
 }
