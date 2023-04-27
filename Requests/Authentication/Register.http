@@ -1,9 +1,9 @@
-@host= http://localhost:5164/auth
+@host= http://localhost:9991/auth
 POST {{host}}/register
 Content-Type:application/json
 
 {
-"name" : "",
+"name" : "MASOUD",
 "lastName" : "asdada",
 "email" : "masoud@masoud.com",
 "password" : "admin123"

@@ -1,2 +1,2 @@
-@host= http://localhost:5164
+@host= http://localhost:9990
 GET {{host}}/WeatherForecast

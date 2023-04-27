@@ -7,20 +7,26 @@ using Application.Common.Interfaces.Persistance;
 using Domain.Entities;
 using FluentResults;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<AuthenticationResult>>
 {
     private readonly IJWTTokenGenerator _jWTTokenGenerator;
     private readonly IUserRepository _userRepository;
+    private readonly ILogger<RegisterCommandHandler> _logger;
 
-    public RegisterCommandHandler(IUserRepository userRepository, IJWTTokenGenerator jWTTokenGenerator)
+    public RegisterCommandHandler(IUserRepository userRepository, IJWTTokenGenerator jWTTokenGenerator, ILogger<RegisterCommandHandler> logger)
     {
         _userRepository = userRepository;
         _jWTTokenGenerator = jWTTokenGenerator;
+        _logger = logger;
     }
 
     public async Task<Result<AuthenticationResult>> Handle(RegisterCommand command, CancellationToken cancellationToken)
     {
+        Console.WriteLine("HELO WORLDS");
+        _logger.LogInformation("HELLLLLLLLLLLLLLLLLO");
+
         if (_userRepository.GetUserByEmail(command.Email) is User)
             return Result.Fail<AuthenticationResult>(new[]
             {
